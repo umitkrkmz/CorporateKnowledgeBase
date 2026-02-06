@@ -1,0 +1,37 @@
+@model CorporateKnowledgeBase.Application.Features.Announcements.CreateAnnouncementCommand
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h2>New Announcement</h2>
+            <p style="color: var(--text-muted); margin: 0;">Create a new announcement for all users.</p>
+        </div>
+    </div>
+
+    <div class="kb-form-card">
+        <form asp-action="Create" method="post">
+            <input type="hidden" asp-for="AuthorId" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
+
+            <div class="kb-form-group">
+                <label class="kb-form-label">Title</label>
+                <input asp-for="Title" class="kb-form-control" placeholder="Enter announcement title..." required />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="kb-form-group">
+                <label class="kb-form-label">Content</label>
+                <textarea asp-for="Content" class="kb-form-control" rows="10" placeholder="Write your announcement content..." required></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+                <small class="text-muted">This announcement will be visible to all authenticated users.</small>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="kb-btn kb-btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.35rem;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    Publish Announcement
+                </button>
+                <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

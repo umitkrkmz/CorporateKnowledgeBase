@@ -1,0 +1,356 @@
+@model CorporateKnowledgeBase.Application.Features.BlogPosts.BlogPostDetailDto
+@using CorporateKnowledgeBase.Application.Features.Comments
+@{
+    var comments = (List<CommentDto>)ViewBag.Comments;
+    int likeCount = ViewBag.LikeCount;
+    bool isLiked = ViewBag.IsLiked;
+
+    int CountAll(List<CommentDto> list)
+    {
+        int count = 0;
+        foreach (var c in list) { count += 1 + CountAll(c.Replies); }
+        return count;
+    }
+}
+
+@functions {
+    void RenderComment(CommentDto c, int depth, int blogPostId)
+    {
+        var marginLeft = depth * 40;
+        <div class="kb-comment" style="margin-left: @(marginLeft)px;" id="comment-@c.Id">
+            <div class="kb-comment-avatar">
+                @if (!string.IsNullOrEmpty(c.AuthorImagePath))
+                {
+                    <img src="@c.AuthorImagePath" alt="@c.AuthorName" />
+                }
+                else
+                {
+                    @c.AuthorName[0]
+                }
+            </div>
+            <div style="flex: 1;">
+                <div class="kb-comment-body">
+                    <div class="kb-comment-meta">
+                        <span class="kb-comment-author">@c.AuthorName</span>
+                        <span class="kb-comment-time">@c.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+                    </div>
+                    <div class="kb-comment-content">@c.Content</div>
+                </div>
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <button class="kb-btn kb-btn-sm" style="background: none; color: var(--text-muted); padding: 0.2rem 0; margin-top: 0.3rem; font-size: 0.78rem;"
+                            onclick="showReplyBox(@c.Id)">Reply</button>
+                }
+                <div id="reply-box-@c.Id" class="mt-2 d-none">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input id="reply-input-@c.Id" class="kb-form-control" placeholder="Write a reply..." style="flex: 1;" />
+                        <button class="kb-btn kb-btn-primary kb-btn-sm"
+                                onclick="postComment(@c.Id, null, @blogPostId)">Send</button>
+                        <button class="kb-btn kb-btn-outline kb-btn-sm"
+                                onclick="document.getElementById('reply-box-@c.Id').classList.add('d-none')">Cancel</button>
+                    </div>
+                </div>
+                @foreach (var reply in c.Replies)
+                {
+                    RenderComment(reply, depth + 1, blogPostId);
+                }
+            </div>
+        </div>
+    }
+}
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="kb-detail-header">
+            <h1>@Model.Title</h1>
+            <div class="kb-detail-meta">
+                <span>Views: @Model.ViewCount</span>
+                <span>|</span>
+                <span>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+            </div>
+            <div class="kb-detail-badges">
+                <span class="kb-badge kb-badge-primary">@Model.CategoryName</span>
+                @{
+                    var statusBadge = Model.Status switch
+                    {
+                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.Draft => "kb-badge-muted",
+                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.PendingReview => "kb-badge-warning",
+                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.Published => "kb-badge-success",
+                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.Rejected => "kb-badge-danger",
+                        _ => "kb-badge-muted"
+                    };
+                }
+                <span class="kb-badge @statusBadge">@Model.Status</span>
+                @foreach (var tag in Model.Tags)
+                {
+                    <a href="@Url.Action("Index", "BlogPosts", new { tag })"
+                       class="kb-badge kb-badge-tag">#@tag</a>
+                }
+            </div>
+        </div>
+
+        @if (Model.Status == CorporateKnowledgeBase.Domain.Enums.ContentStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+        {
+            <div class="kb-alert kb-alert-danger">
+                <strong>Rejected:</strong> @Model.RejectionReason
+            </div>
+        }
+
+        <!-- Like button -->
+        <button id="likeBtn" class="kb-like-btn @(isLiked ? "liked" : "")" onclick="toggleLike()" style="margin-bottom: 1rem;">
+            <span id="likeIcon">@Html.Raw(isLiked ? "&#9829;" : "&#9825;")</span>
+            <span id="likeCount">@likeCount</span>
+        </button>
+
+        <div class="content-body">@Html.Raw(ViewBag.ResolvedContent ?? Model.Content)</div>
+
+        <div class="kb-detail-actions">
+            @{
+                bool canEdit = ViewBag.CanEdit ?? false;
+                bool canDelete = ViewBag.CanDelete ?? false;
+                bool isApproved = ViewBag.IsApproved ?? false;
+            }
+            @if (canEdit)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="kb-btn kb-btn-warning kb-btn-sm">Edit</a>
+            }
+            @if (canDelete)
+            {
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline"
+                      onsubmit="return confirm('Are you sure you want to delete this blog post? This action cannot be undone.');">
+                    <button type="submit" class="kb-btn kb-btn-danger kb-btn-sm">Delete</button>
+                </form>
+            }
+            @if (Model.Status == CorporateKnowledgeBase.Domain.Enums.ContentStatus.Draft && canEdit)
+            {
+                <form asp-action="SubmitForReview" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    <button type="submit" class="kb-btn kb-btn-info kb-btn-sm">Submit for Review</button>
+                </form>
+            }
+            @if (Model.Status == CorporateKnowledgeBase.Domain.Enums.ContentStatus.PendingReview && (User.IsInRole("Admin") || User.IsInRole("Editor")))
+            {
+                <form asp-controller="ContentReview" asp-action="Approve" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="contentType" value="1" />
+                    <button type="submit" class="kb-btn kb-btn-success kb-btn-sm">Approve</button>
+                </form>
+                <button class="kb-btn kb-btn-danger kb-btn-sm" data-bs-toggle="modal" data-bs-target="#rejectContentModal">Reject</button>
+            }
+            @if (User.Identity!.IsAuthenticated)
+            {
+                <button class="kb-btn kb-btn-outline kb-btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    &#9888; Report
+                </button>
+            }
+            <a asp-action="Index" class="kb-btn kb-btn-outline kb-btn-sm">&#8592; Back</a>
+        </div>
+
+        <!-- Reject Content Modal -->
+        @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
+        {
+            <div class="modal fade" id="rejectContentModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-controller="ContentReview" asp-action="Reject" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="contentType" value="1" />
+                            <div class="modal-header">
+                                <h5 class="modal-title">Reject Content</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="kb-form-group">
+                                    <label class="kb-form-label">Reason for rejection</label>
+                                    <textarea name="reason" class="kb-form-control" rows="3" required
+                                              placeholder="Explain why this content is being rejected..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="kb-btn kb-btn-outline" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="kb-btn kb-btn-danger">Reject</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Report Modal -->
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <div class="modal fade" id="reportModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Report Content</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="kb-form-group">
+                                <label class="kb-form-label">Reason</label>
+                                <select id="reportReason" class="kb-form-control">
+                                    <option value="">Select a reason...</option>
+                                    <option value="Spam/Advertising">Spam / Advertising</option>
+                                    <option value="Offensive Language">Offensive Language</option>
+                                    <option value="Misinformation">Misinformation</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="kb-form-group">
+                                <label class="kb-form-label">Description (optional)</label>
+                                <textarea id="reportDescription" class="kb-form-control" rows="3" placeholder="Provide more details..."></textarea>
+                            </div>
+                            <div id="reportMessage" class="d-none"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="kb-btn kb-btn-outline" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="kb-btn kb-btn-warning" onclick="submitReport()">Submit Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Comments section -->
+        <div class="kb-panel" style="margin-top: 1.5rem;">
+            <div class="kb-panel-title">Comments (@CountAll(comments))</div>
+
+            @if (isApproved)
+            {
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+                    <input id="commentInput" class="kb-form-control" placeholder="Write a comment..." style="flex: 1;" />
+                    <button class="kb-btn kb-btn-primary" onclick="postComment(null, null, @Model.Id)">Send</button>
+                </div>
+            }
+
+            <div id="commentsList">
+                @foreach (var c in comments)
+                {
+                    RenderComment(c, 0, Model.Id);
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function toggleLike() {
+        try {
+            const res = await fetch('/api/Likes/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentId: @Model.Id, contentType: 'BlogPost' })
+            });
+            const data = await res.json();
+            document.getElementById('likeCount').textContent = data.count;
+            const btn = document.getElementById('likeBtn');
+            const icon = document.getElementById('likeIcon');
+            if (data.isLiked) {
+                btn.classList.add('liked');
+                icon.innerHTML = '♥';
+            } else {
+                btn.classList.remove('liked');
+                icon.innerHTML = '♡';
+            }
+        } catch (e) { alert('Please log in to like.'); }
+    }
+
+    function showReplyBox(commentId) {
+        const box = document.getElementById('reply-box-' + commentId);
+        box.classList.remove('d-none');
+        document.getElementById('reply-input-' + commentId).focus();
+    }
+
+    async function postComment(parentId, documentId, blogPostId) {
+        let content;
+        if (parentId) {
+            const input = document.getElementById('reply-input-' + parentId);
+            content = input.value.trim();
+            if (!content) return;
+        } else {
+            const input = document.getElementById('commentInput');
+            content = input.value.trim();
+            if (!content) return;
+        }
+
+        let body = 'content=' + encodeURIComponent(content);
+        if (documentId) body += '&documentId=' + documentId;
+        if (blogPostId) body += '&blogPostId=' + blogPostId;
+        if (parentId) body += '&parentCommentId=' + parentId;
+
+        const res = await fetch('@Url.Action("Create", "Comments")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body
+        });
+        const data = await res.json();
+
+        // Build comment HTML
+        const avatarHtml = data.authorImagePath
+            ? `<img src="${data.authorImagePath}" alt="${data.authorName}" />`
+            : `${data.authorName[0]}`;
+
+        const commentHtml = `
+            <div class="kb-comment" id="comment-${data.id}">
+                <div class="kb-comment-avatar">${avatarHtml}</div>
+                <div style="flex: 1;">
+                    <div class="kb-comment-body">
+                        <div class="kb-comment-meta">
+                            <span class="kb-comment-author">${data.authorName}</span>
+                            <span class="kb-comment-time">${data.createdAt}</span>
+                        </div>
+                        <div class="kb-comment-content">${data.content}</div>
+                    </div>
+                </div>
+            </div>`;
+
+        if (parentId) {
+            const replyBox = document.getElementById('reply-box-' + parentId);
+            replyBox.insertAdjacentHTML('afterend', commentHtml);
+            replyBox.classList.add('d-none');
+            document.getElementById('reply-input-' + parentId).value = '';
+        } else {
+            document.getElementById('commentsList').insertAdjacentHTML('afterbegin', commentHtml);
+            document.getElementById('commentInput').value = '';
+        }
+    }
+
+    async function submitReport() {
+        const reason = document.getElementById('reportReason').value;
+        const description = document.getElementById('reportDescription').value;
+        const msgDiv = document.getElementById('reportMessage');
+
+        if (!reason) {
+            msgDiv.className = 'kb-alert kb-alert-danger';
+            msgDiv.textContent = 'Please select a reason.';
+            return;
+        }
+        if (reason === 'Other' && !description.trim()) {
+            msgDiv.className = 'kb-alert kb-alert-danger';
+            msgDiv.textContent = "Please provide a description for 'Other'.";
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/ReportsApi/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentId: @Model.Id, contentType: 1, reason: reason, description: description })
+            });
+            const data = await res.json();
+            if (data.success) {
+                msgDiv.className = 'kb-alert kb-alert-success';
+                msgDiv.textContent = data.message;
+                setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide(), 2000);
+            } else {
+                msgDiv.className = 'kb-alert kb-alert-danger';
+                msgDiv.textContent = data.message;
+            }
+        } catch (e) {
+            msgDiv.className = 'kb-alert kb-alert-danger';
+            msgDiv.textContent = 'An error occurred. Please try again.';
+        }
+    }
+</script>
+}

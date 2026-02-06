@@ -1,0 +1,191 @@
+@model dynamic
+
+@{
+    string searchPlaceholder = Model.SearchPlaceholder ?? "Search...";
+    string searchTerm = Model.SearchTerm ?? "";
+    string baseUrl = Model.BaseUrl ?? "";
+    int pageSize = Model.PageSize ?? 10;
+    var filters = Model.Filters as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+}
+
+<div class="kb-table-toolbar">
+    <form method="get" action="@baseUrl" class="kb-toolbar-search">
+        <div class="kb-search-input-wrapper">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" name="search" value="@searchTerm" class="kb-search-input"
+                   placeholder="@searchPlaceholder" />
+        </div>
+        <input type="hidden" name="pageSize" value="@pageSize" />
+
+        @foreach (var filter in filters)
+        {
+            string filterName = filter.Name;
+            string filterValue = filter.Value ?? "";
+            <input type="hidden" name="@filterName" value="@filterValue" />
+        }
+
+        <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+        @if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            <a href="@baseUrl" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+        }
+    </form>
+
+    <div class="kb-toolbar-right">
+        @if (filters.Any())
+        {
+            <div class="kb-toolbar-filters">
+                @foreach (var filter in filters)
+                {
+                    string filterName = filter.Name;
+                    string filterLabel = filter.Label;
+                    var options = filter.Options as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+                    string currentValue = filter.Value ?? "";
+
+                    <div class="kb-filter-group">
+                        <label class="kb-filter-label">@filterLabel</label>
+                        <select name="@filterName" class="kb-filter-select" onchange="this.form.submit()">
+                            @foreach (var option in options)
+                            {
+                                string optionValue = option.Value;
+                                string optionLabel = option.Label;
+                                bool selected = optionValue == currentValue;
+                                <option value="@optionValue" selected="@selected">@optionLabel</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="kb-page-size">
+            <label class="kb-filter-label">Show</label>
+            <select name="pageSize" class="kb-filter-select" onchange="window.location.href='@(baseUrl)?pageSize=' + this.value + '&search=@searchTerm'">
+                <option value="10" selected="@(pageSize == 10)">10</option>
+                <option value="25" selected="@(pageSize == 25)">25</option>
+                <option value="50" selected="@(pageSize == 50)">50</option>
+                <option value="100" selected="@(pageSize == 100)">100</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<style>
+    .kb-table-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+    }
+
+    .kb-toolbar-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .kb-search-input-wrapper {
+        position: relative;
+        flex: 1;
+        max-width: 320px;
+    }
+
+    .kb-search-input-wrapper svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .kb-search-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-primary);
+        color: var(--text-body);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .kb-search-input:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgba(77, 89, 234, 0.1);
+    }
+
+    .kb-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .kb-toolbar-filters {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .kb-filter-group,
+    .kb-page-size {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .kb-filter-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .kb-filter-select {
+        padding: 0.4rem 2rem 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-primary) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right 0.5rem center;
+        background-size: 12px;
+        color: var(--text-body);
+        cursor: pointer;
+        appearance: none;
+    }
+
+    .kb-filter-select:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+    }
+
+    @@media (max-width: 768px) {
+        .kb-table-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .kb-toolbar-search {
+            width: 100%;
+            max-width: none;
+        }
+
+        .kb-search-input-wrapper {
+            max-width: none;
+        }
+
+        .kb-toolbar-right {
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+    }
+</style>

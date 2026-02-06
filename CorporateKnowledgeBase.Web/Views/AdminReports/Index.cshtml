@@ -1,0 +1,160 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@using CorporateKnowledgeBase.Domain.Enums
+@model PagedResult<CorporateKnowledgeBase.Application.Features.Reports.ReportDto>
+
+@{
+    var search = ViewBag.Search as string ?? "";
+    var statusFilter = ViewBag.Status as ReportStatus?;
+    var contentTypeFilter = ViewBag.ContentType as ContentType?;
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortDesc = (bool)(ViewBag.SortDesc ?? true);
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <h2>Report Management</h2>
+        <span class="kb-badge kb-badge-muted">@Model.TotalCount reports</span>
+    </div>
+
+    @if (TempData["Success"] is string msg)
+    {
+        <div class="kb-alert kb-alert-success" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Toolbar -->
+    <div class="kb-table-toolbar">
+        <form method="get" class="kb-toolbar-search">
+            <div class="kb-search-input-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="@search" class="kb-search-input"
+                       placeholder="Search by reason..." />
+            </div>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <input type="hidden" name="status" value="@(statusFilter?.ToString() ?? "")" />
+            <input type="hidden" name="contentType" value="@(contentTypeFilter?.ToString() ?? "")" />
+            <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+            @if (!string.IsNullOrWhiteSpace(search) || statusFilter.HasValue || contentTypeFilter.HasValue)
+            {
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+            }
+        </form>
+
+        <div class="kb-toolbar-right">
+            <div class="kb-filter-group">
+                <label class="kb-filter-label">Status</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=@pageSize&contentType=@(contentTypeFilter?.ToString() ?? "")&status=' + this.value">
+                    <option value="">All</option>
+                    <option value="Pending" selected="@(statusFilter == ReportStatus.Pending)">Pending</option>
+                    <option value="Reviewed" selected="@(statusFilter == ReportStatus.Reviewed)">Reviewed</option>
+                    <option value="Dismissed" selected="@(statusFilter == ReportStatus.Dismissed)">Dismissed</option>
+                </select>
+            </div>
+
+            <div class="kb-filter-group">
+                <label class="kb-filter-label">Type</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=@pageSize&status=@(statusFilter?.ToString() ?? "")&contentType=' + this.value">
+                    <option value="">All Types</option>
+                    <option value="Document" selected="@(contentTypeFilter == ContentType.Document)">Document</option>
+                    <option value="BlogPost" selected="@(contentTypeFilter == ContentType.BlogPost)">Blog Post</option>
+                </select>
+            </div>
+
+            <div class="kb-page-size">
+                <label class="kb-filter-label">Show</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&status=@(statusFilter?.ToString() ?? "")&contentType=@(contentTypeFilter?.ToString() ?? "")&pageSize=' + this.value">
+                    <option value="10" selected="@(pageSize == 10)">10</option>
+                    <option value="25" selected="@(pageSize == 25)">25</option>
+                    <option value="50" selected="@(pageSize == 50)">50</option>
+                    <option value="100" selected="@(pageSize == 100)">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="kb-empty-state">
+            @if (!string.IsNullOrWhiteSpace(search) || statusFilter.HasValue || contentTypeFilter.HasValue)
+            {
+                <p>No reports match your search criteria.</p>
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-outline">Clear Filters</a>
+            }
+            else
+            {
+                <p>No reports found.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="kb-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>
+                            <a href="?search=@search&status=@(statusFilter?.ToString() ?? "")&contentType=@(contentTypeFilter?.ToString() ?? "")&pageSize=@pageSize&sortBy=createdAt&sortDesc=@(string.IsNullOrEmpty(sortBy) || sortBy == "createdAt" ? !sortDesc : true)" class="kb-sort-link @(string.IsNullOrEmpty(sortBy) || sortBy == "createdAt" ? "active" : "")">
+                                Date
+                            </a>
+                        </th>
+                        <th>Reporter</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var report in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                @if (report.Status == ReportStatus.Pending)
+                                {
+                                    <span class="kb-badge kb-badge-warning">Pending</span>
+                                }
+                                else if (report.Status == ReportStatus.Reviewed)
+                                {
+                                    <span class="kb-badge kb-badge-success">Reviewed</span>
+                                }
+                                else
+                                {
+                                    <span class="kb-badge kb-badge-muted">Dismissed</span>
+                                }
+                            </td>
+                            <td>@report.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td style="font-weight: 500; color: var(--text-dark);">@report.ReporterName</td>
+                            <td>
+                                @if (report.ContentType == ContentType.Document)
+                                {
+                                    <span class="kb-badge kb-badge-primary">Document</span>
+                                }
+                                else if (report.ContentType == ContentType.BlogPost)
+                                {
+                                    <span class="kb-badge kb-badge-primary">Blog Post</span>
+                                }
+                                else
+                                {
+                                    <span class="kb-badge kb-badge-muted">Announcement</span>
+                                }
+                            </td>
+                            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-body);">@report.Reason</td>
+                            <td>
+                                <a asp-action="Review" asp-route-id="@report.Id" class="kb-btn kb-btn-outline kb-btn-sm">Review</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        var queryString = $"&search={search}&status={statusFilter?.ToString() ?? ""}&contentType={contentTypeFilter?.ToString() ?? ""}&pageSize={pageSize}&sortBy={sortBy}&sortDesc={sortDesc}";
+        <partial name="_Pagination" model="@(new { Model.Page, Model.TotalPages, Model.TotalCount, BaseUrl = Url.Action("Index"), QueryString = queryString })" />
+    }
+</div>

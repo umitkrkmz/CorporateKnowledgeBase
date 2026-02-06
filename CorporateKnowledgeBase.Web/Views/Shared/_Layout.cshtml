@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Corporate Knowledge Base</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/CorporateKnowledgeBase.Web.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <header>
+        <nav class="navbar navbar-expand-lg kb-navbar fixed-top" id="mainNavbar">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <span class="brand-icon">
+                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                            <path d="M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z" fill="url(#brandGrad)"/>
+                            <circle cx="12" cy="9" r="2" fill="white"/>
+                            <circle cx="8" cy="14" r="1.5" fill="white" opacity="0.9"/>
+                            <circle cx="16" cy="14" r="1.5" fill="white" opacity="0.9"/>
+                            <path d="M12 11L8.5 13M12 11L15.5 13" stroke="white" stroke-width="1" opacity="0.7"/>
+                            <defs>
+                                <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </span>
+                    <span class="brand-text">Knowledge<span class="brand-highlight">Base</span></span>
+                </a>
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-label="Toggle navigation">
+                    <svg width="20" height="20" fill="var(--text-muted)" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5"/>
+                    </svg>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto ms-2">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Documents" asp-action="Index">Documents</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="BlogPosts" asp-action="Index">Blog</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Announcements" asp-action="Index">Announcements</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Faq" asp-action="Index">FAQ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="AI" asp-action="Index">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-1" style="vertical-align: -1px;">
+                                    <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.6 26.6 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.93.93 0 0 1-.765.935c-.845.147-2.34.346-4.235.346s-3.39-.2-4.235-.346A.93.93 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.8 24.8 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25 25 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.135"/>
+                                    <path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2zM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5"/>
+                                </svg>
+                                AI Assistant
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="ContentReview" asp-action="Index">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-1" style="vertical-align: -1px;">
+                                        <path d="M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 2.354 7.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
+                                    </svg>
+                                    Review
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-1" style="vertical-align: -1px;">
+                                        <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+                                    </svg>
+                                    Admin
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="AdminCategories" asp-action="Index">Categories</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AdminTags" asp-action="Index">Tags</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AdminUsers" asp-action="Index">Users</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AdminDepartments" asp-action="Index">Departments</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AdminReports" asp-action="Index">Reports</a></li>
+                                    <li><a class="dropdown-item" asp-controller="ContentReview" asp-action="Index">Content Review</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-controller="AuditLogs" asp-action="Index">Audit Logs</a></li>
+                                    <li><a class="dropdown-item" href="/hangfire" target="_blank">Hangfire Dashboard</a></li>
+                                    <li><a class="dropdown-item" asp-controller="AdminSettings" asp-action="Index">Settings</a></li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- Search -->
+                    <form asp-controller="Search" asp-action="Index" method="get" class="kb-search-form me-3 d-none d-lg-block">
+                        <span class="kb-search-icon">
+                            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                            </svg>
+                        </span>
+                        <input name="q" class="kb-navbar-search-input" placeholder="Search..." autocomplete="off" />
+                    </form>
+
+                    <!-- Right side -->
+                    <div class="d-flex align-items-center gap-2">
+                        @if (User.Identity!.IsAuthenticated)
+                        {
+                            <!-- Notification bell -->
+                            <div class="dropdown">
+                                <a class="nav-link kb-notif-btn" href="#" data-bs-toggle="dropdown" id="notifBell"
+                                   onclick="loadNotifications()">
+                                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92z"/>
+                                    </svg>
+                                    <span id="notifBadge" class="badge bg-danger kb-notif-badge d-none">0</span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-end notification-dropdown p-0">
+                                    <div class="d-flex justify-content-between align-items-center px-3 py-2" style="border-bottom: 1px solid var(--border-color);">
+                                        <strong style="font-size: 0.9rem; color: var(--text-dark);">Notifications</strong>
+                                        <button class="btn btn-sm btn-link text-decoration-none p-0" style="font-size: 0.8rem; color: var(--brand-primary);" onclick="markAllRead()">Mark all read</button>
+                                    </div>
+                                    <div id="notifList">
+                                        <div class="text-center py-3 text-muted" style="font-size: 0.85rem;">Loading...</div>
+                                    </div>
+                                    <div class="text-center py-2" style="border-top: 1px solid var(--border-color);">
+                                        <a asp-controller="Notifications" asp-action="Index" class="text-decoration-none" style="font-size: 0.8rem; color: var(--brand-primary); font-weight: 500;">See all notifications</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- User dropdown -->
+                            <div class="dropdown">
+                                <a class="kb-user-btn dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="true" style="text-decoration: none;">
+                                    <span class="kb-user-avatar">
+                                        @(User.Identity.Name?.Substring(0, 1).ToUpper())
+                                    </span>
+                                    <span class="d-none d-lg-inline">@User.Identity.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-2" style="vertical-align: -1px; opacity: 0.6;">
+                                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                        </svg>
+                                        My Profile
+                                    </a></li>
+                                    <li><a class="dropdown-item" asp-controller="Profile" asp-action="NotificationSettings">
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-2" style="vertical-align: -1px; opacity: 0.6;">
+                                            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2M8 1.918l-.797.161A4 4 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4 4 0 0 0-3.203-3.92z"/>
+                                        </svg>
+                                        Notification Settings
+                                    </a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item" style="color: #ef4444;">
+                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16" class="me-2" style="vertical-align: -1px; opacity: 0.6;">
+                                                    <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                                                    <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                                                </svg>
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a class="kb-auth-link" asp-controller="Account" asp-action="Login">Sign In</a>
+                            <a class="kb-auth-btn" asp-controller="Account" asp-action="Register">Get Started</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Spacer for fixed navbar -->
+    <div style="height: 56px;"></div>
+
+    <div class="container-fluid px-3 px-lg-4 flex-grow-1 kb-main py-4">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="kb-footer mt-auto">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="brand-icon brand-icon-sm">
+                            <svg width="14" height="14" fill="none" viewBox="0 0 24 24">
+                                <path d="M12 2L21.5 7.5V16.5L12 22L2.5 16.5V7.5L12 2Z" fill="url(#footerGrad)"/>
+                                <circle cx="12" cy="9" r="2" fill="white"/>
+                                <circle cx="8" cy="14" r="1.5" fill="white" opacity="0.8"/>
+                                <circle cx="16" cy="14" r="1.5" fill="white" opacity="0.8"/>
+                                <defs>
+                                    <linearGradient id="footerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#667eea"/>
+                                        <stop offset="100%" stop-color="#764ba2"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </span>
+                        <strong style="color: #e2e8f0; font-size: 0.95rem;">Knowledge<span style="color: #a78bfa;">Base</span></strong>
+                    </div>
+                    <p class="mb-3" style="font-size: 0.85rem; line-height: 1.6;">
+                        A centralized platform for technical documentation, blog posts, and team announcements.
+                    </p>
+                    <div class="kb-footer-social">
+                        <a href="https://github.com/umitkrkmz" target="_blank" title="GitHub">
+                            <svg width="16" height="16" fill="#94a3b8" viewBox="0 0 16 16">
+                                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                            </svg>
+                        </a>
+                        <a href="https://linkedin.com/in/zeynel-%C3%BCmit-korkmaz/" target="_blank" title="LinkedIn">
+                            <svg width="16" height="16" fill="#94a3b8" viewBox="0 0 16 16">
+                                <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6>Quick Links</h6>
+                    <ul>
+                        <li><a asp-controller="Documents" asp-action="Index">Documents</a></li>
+                        <li><a asp-controller="BlogPosts" asp-action="Index">Blog Posts</a></li>
+                        <li><a asp-controller="Announcements" asp-action="Index">Announcements</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6>Resources</h6>
+                    <ul>
+                        <li><a asp-controller="Faq" asp-action="Index">FAQ</a></li>
+                        <li><a asp-controller="AI" asp-action="Index">AI Assistant</a></li>
+                        <li><a asp-controller="Search" asp-action="Index">Search</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6>Legal</h6>
+                    <ul>
+                        <li><a asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
+                        <li><a asp-controller="Home" asp-action="Terms">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="kb-footer-divider" />
+            <div class="kb-footer-bottom text-center">
+                &copy; @DateTime.Now.Year Corporate Knowledge Base. Built with ASP.NET Core. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const nav = document.getElementById('mainNavbar');
+            if (window.scrollY > 10) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveNotification", function (message) {
+            var toast = document.createElement("div");
+            toast.className = "kb-toast";
+            toast.innerHTML = `
+                <div class="toast show align-items-center text-bg-success border-0 shadow-lg" role="alert" style="border-radius: 12px;">
+                    <div class="d-flex">
+                        <div class="toast-body" style="font-size: 0.85rem;">${message}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                                onclick="this.closest('.kb-toast').remove()"></button>
+                    </div>
+                </div>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                let count = parseInt(badge.textContent) || 0;
+                badge.textContent = count + 1;
+                badge.classList.remove('d-none');
+            }
+        });
+
+        connection.start().catch(err => console.error("SignalR connection error:", err));
+
+        // Notification dropdown
+        async function loadNotifications() {
+            try {
+                const res = await fetch('/Notifications/GetDropdown');
+                const data = await res.json();
+                const list = document.getElementById('notifList');
+                const badge = document.getElementById('notifBadge');
+
+                if (data.unreadCount > 0) {
+                    badge.textContent = data.unreadCount;
+                    badge.classList.remove('d-none');
+                } else {
+                    badge.classList.add('d-none');
+                }
+
+                if (data.items.length === 0) {
+                    list.innerHTML = '<div class="text-center py-3 text-muted" style="font-size: 0.85rem;">No notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = data.items.map(n => {
+                    const hasLink = n.referenceId != null;
+                    const href = hasLink ? `/Notifications/GoTo?id=${n.id}` : '#';
+                    return `
+                    <a href="${href}" class="notification-item d-block text-decoration-none ${n.isRead ? '' : 'unread'}" style="color: var(--text-body);">
+                        <div style="font-size: 0.85rem;">${n.message}</div>
+                        <small style="color: var(--text-muted);">${new Date(n.createdAt).toLocaleDateString('en-US')}</small>
+                    </a>`;
+                }).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function markAllRead() {
+            await fetch('/Notifications/MarkAllRead', { method: 'POST' });
+            document.getElementById('notifBadge').classList.add('d-none');
+            loadNotifications();
+        }
+
+        // Load initial badge count
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.getElementById('notifBell')) {
+                fetch('/Notifications/GetDropdown')
+                    .then(r => r.json())
+                    .then(data => {
+                        const badge = document.getElementById('notifBadge');
+                        if (data.unreadCount > 0) {
+                            badge.textContent = data.unreadCount;
+                            badge.classList.remove('d-none');
+                        }
+                    }).catch(() => { });
+            }
+        });
+    </script>
+</body>
+</html>

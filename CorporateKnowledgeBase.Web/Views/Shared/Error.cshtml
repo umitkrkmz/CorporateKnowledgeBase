@@ -1,0 +1,38 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="row justify-content-center" style="min-height: 60vh;">
+    <div class="col-lg-6 d-flex align-items-center">
+        <div style="text-align: center; width: 100%; padding: 3rem 1rem;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem;">Something went wrong</h1>
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem;">An error occurred while processing your request.</p>
+
+            @if (Model.ShowRequestId)
+            {
+                <div class="kb-alert kb-alert-danger" style="display: inline-flex; margin-bottom: 1.5rem;">
+                    <strong>Request ID:</strong>&nbsp;<code>@Model.RequestId</code>
+                </div>
+            }
+
+            <div>
+                <a href="/" class="kb-btn kb-btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Go Home
+                </a>
+                <a href="javascript:history.back()" class="kb-btn kb-btn-outline" style="margin-left: 0.5rem;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Go Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

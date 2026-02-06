@@ -1,0 +1,26 @@
+@model CorporateKnowledgeBase.Application.Features.Users.UserDto
+
+<div class="kb-page-header">
+    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Edit Roles &mdash; @Model.FullName</h2>
+</div>
+
+<div class="kb-form-card">
+    <form asp-action="EditRoles" asp-route-id="@Model.Id" method="post">
+        <div class="kb-form-group">
+            <label class="kb-form-label" style="margin-bottom: 0.75rem;">Assign Roles</label>
+            @foreach (var role in (string[])ViewBag.AllRoles)
+            {
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                    <input type="checkbox" name="roles" value="@role" id="role-@role"
+                           @(Model.Roles.Contains(role) ? "checked" : "")
+                           style="width: 1.1rem; height: 1.1rem; accent-color: var(--brand-primary);" />
+                    <label for="role-@role" style="margin: 0; font-weight: 500; color: var(--text-dark); cursor: pointer;">@role</label>
+                </div>
+            }
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 0.5rem;">
+            <button type="submit" class="kb-btn kb-btn-primary">Save</button>
+            <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

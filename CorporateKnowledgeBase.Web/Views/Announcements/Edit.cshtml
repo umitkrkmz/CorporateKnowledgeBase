@@ -1,0 +1,22 @@
+@model CorporateKnowledgeBase.Application.Features.Announcements.AnnouncementDto
+
+<div class="kb-page-header">
+    <h1>Edit Announcement</h1>
+</div>
+
+<div class="kb-form-card">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <div class="kb-form-group">
+            <label class="kb-form-label">Title</label>
+            <input name="title" class="kb-form-control" value="@Model.Title" />
+        </div>
+        <div class="kb-form-group">
+            <label class="kb-form-label">Content</label>
+            <textarea name="content" class="kb-form-control" rows="6">@Model.Content</textarea>
+        </div>
+        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+            <button type="submit" class="kb-btn kb-btn-primary">Update</button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="kb-btn kb-btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

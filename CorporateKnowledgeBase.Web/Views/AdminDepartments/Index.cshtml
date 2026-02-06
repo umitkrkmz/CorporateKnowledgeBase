@@ -1,0 +1,126 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@model PagedResult<CorporateKnowledgeBase.Application.Features.Departments.DepartmentDto>
+
+@{
+    var search = ViewBag.Search as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortDesc = (bool)(ViewBag.SortDesc ?? false);
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <h2>Department Management</h2>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="kb-badge kb-badge-muted">@Model.TotalCount departments</span>
+            <a asp-action="Create" class="kb-btn kb-btn-primary">+ New Department</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string msg)
+    {
+        <div class="kb-alert kb-alert-success" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Toolbar -->
+    <div class="kb-table-toolbar">
+        <form method="get" class="kb-toolbar-search">
+            <div class="kb-search-input-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="@search" class="kb-search-input"
+                       placeholder="Search departments..." />
+            </div>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+            }
+        </form>
+
+        <div class="kb-toolbar-right">
+            <div class="kb-page-size">
+                <label class="kb-filter-label">Show</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=' + this.value">
+                    <option value="10" selected="@(pageSize == 10)">10</option>
+                    <option value="25" selected="@(pageSize == 25)">25</option>
+                    <option value="50" selected="@(pageSize == 50)">50</option>
+                    <option value="100" selected="@(pageSize == 100)">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="kb-empty-state">
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <p>No departments match your search criteria.</p>
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-outline">Clear Filters</a>
+            }
+            else
+            {
+                <p>No departments found. Create your first department to get started.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="kb-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?search=@search&pageSize=@pageSize&sortBy=name&sortDesc=@(sortBy == "name" ? !sortDesc : false)" class="kb-sort-link @(string.IsNullOrEmpty(sortBy) || sortBy == "name" ? "active" : "")">
+                                Name
+                                @if (string.IsNullOrEmpty(sortBy) || sortBy == "name")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        @if (sortDesc)
+                                        {
+                                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                                        }
+                                        else
+                                        {
+                                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                                        }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>Description</th>
+                        <th style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dept in Model.Items)
+                    {
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-dark);">@dept.Name</td>
+                            <td style="color: var(--text-body);">@(dept.Description ?? "-")</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <a asp-action="Edit" asp-route-id="@dept.Id" class="kb-btn kb-btn-outline kb-btn-sm">Edit</a>
+                                    <form asp-action="Delete" asp-route-id="@dept.Id" method="post" style="display: inline;"
+                                          onsubmit="return confirm('Delete this department?');">
+                                        <button type="submit" class="kb-btn kb-btn-danger kb-btn-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        var queryString = $"&search={search}&pageSize={pageSize}&sortBy={sortBy}&sortDesc={sortDesc}";
+        <partial name="_Pagination" model="@(new { Model.Page, Model.TotalPages, Model.TotalCount, BaseUrl = Url.Action("Index"), QueryString = queryString })" />
+    }
+</div>

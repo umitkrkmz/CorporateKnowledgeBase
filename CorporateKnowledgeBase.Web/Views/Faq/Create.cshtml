@@ -1,0 +1,56 @@
+@model CorporateKnowledgeBase.Application.Features.Faq.CreateFaqCommand
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h2>Create FAQ Item</h2>
+            <p style="color: var(--text-muted); margin: 0;">Add a new frequently asked question.</p>
+        </div>
+    </div>
+
+    <div class="kb-form-card">
+        <form asp-action="Create" method="post">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Question</label>
+                        <input asp-for="Question" class="kb-form-control" placeholder="Enter the frequently asked question..." required />
+                        <span asp-validation-for="Question" class="text-danger"></span>
+                    </div>
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Answer</label>
+                        <textarea asp-for="Answer" class="kb-form-control" rows="8" placeholder="Provide a detailed answer..." required></textarea>
+                        <span asp-validation-for="Answer" class="text-danger"></span>
+                        <small class="text-muted">You can use HTML for formatting.</small>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Category</label>
+                        <input asp-for="Category" class="kb-form-control" placeholder="e.g. General, Technical, Account" />
+                        <small class="text-muted">Leave empty for "General" category.</small>
+                    </div>
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Sort Order</label>
+                        <input asp-for="SortOrder" class="kb-form-control" type="number" value="0" />
+                        <small class="text-muted">Lower numbers appear first.</small>
+                    </div>
+                    <div class="kb-form-group" style="margin-top: 1.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input asp-for="IsPublished" type="checkbox" class="form-check-input" checked />
+                            <span class="kb-form-label" style="margin: 0;">Published</span>
+                        </label>
+                        <small class="text-muted" style="display: block; margin-top: 0.25rem;">Unpublished items are only visible to admins.</small>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="kb-btn kb-btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.35rem;"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                    Create FAQ
+                </button>
+                <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

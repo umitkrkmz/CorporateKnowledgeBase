@@ -1,0 +1,132 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@model PagedResult<CorporateKnowledgeBase.Application.Features.Announcements.AnnouncementDto>
+
+@{
+    var search = ViewBag.Search as string ?? "";
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h2>Announcements</h2>
+            <p style="color: var(--text-muted); margin: 0;">Company-wide announcements and updates.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="kb-badge kb-badge-muted">@Model.TotalCount announcements</span>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Create" class="kb-btn kb-btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.35rem;"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+                    New Announcement
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string msg)
+    {
+        <div class="kb-alert kb-alert-success" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
+        </div>
+    }
+
+    <!-- Search Toolbar -->
+    <div class="kb-table-toolbar" style="margin-bottom: 1.5rem;">
+        <form method="get" class="kb-toolbar-search" style="flex: 1; max-width: 500px;">
+            <div class="kb-search-input-wrapper" style="flex: 1; max-width: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="@search" class="kb-search-input" placeholder="Search announcements..." />
+            </div>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+            }
+        </form>
+        <div class="kb-toolbar-right">
+            <div class="kb-page-size">
+                <label class="kb-filter-label">Show</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=' + this.value">
+                    <option value="10" selected="@(pageSize == 10)">10</option>
+                    <option value="25" selected="@(pageSize == 25)">25</option>
+                    <option value="50" selected="@(pageSize == 50)">50</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="kb-empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <p style="color: var(--text-muted); margin-top: 1rem;">No announcements match your search.</p>
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-outline" style="margin-top: 1rem;">Clear Search</a>
+            }
+            else
+            {
+                <p style="color: var(--text-muted); margin-top: 1rem;">No announcements yet.</p>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Create" class="kb-btn kb-btn-primary" style="margin-top: 1rem;">Create First Announcement</a>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <div class="announcements-list">
+            @foreach (var item in Model.Items)
+            {
+                <div class="kb-panel" style="margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                        <div style="flex: 1; min-width: 0;">
+                            <a asp-action="Details" asp-route-id="@item.Id"
+                               style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); text-decoration: none; display: block;">
+                                @item.Title
+                            </a>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                @item.CreatedAt.ToString("dd MMMM yyyy, HH:mm")
+                            </div>
+                        </div>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="kb-btn kb-btn-warning kb-btn-sm">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+                                    <button type="submit" class="kb-btn kb-btn-danger kb-btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    <p style="margin: 1rem 0 0; font-size: 0.9rem; color: var(--text-body); line-height: 1.7;">
+                        @if (item.Content.Length > 300)
+                        {
+                            @item.Content.Substring(0, 300)<text>...</text>
+                            <a asp-action="Details" asp-route-id="@item.Id" style="color: var(--brand-primary); text-decoration: none; font-weight: 500;">Read more</a>
+                        }
+                        else
+                        {
+                            @item.Content
+                        }
+                    </p>
+                </div>
+            }
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            var queryString = $"&search={search}&pageSize={pageSize}";
+            <partial name="_Pagination" model="@(new { Model.Page, Model.TotalPages, Model.TotalCount, BaseUrl = Url.Action("Index"), QueryString = queryString })" />
+        }
+    }
+</div>

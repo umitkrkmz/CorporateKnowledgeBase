@@ -1,0 +1,93 @@
+@model CorporateKnowledgeBase.Application.Features.Profile.UserProfileDto
+
+<div class="kb-profile-page">
+    @if (TempData["Message"] != null)
+    {
+        <div class="kb-alert kb-alert-success" style="margin-bottom: 1.5rem;">@TempData["Message"]</div>
+    }
+
+    <!-- Hero Background -->
+    <div class="kb-profile-hero"></div>
+
+    <!-- Main Profile Card -->
+    <div class="kb-profile-main-card">
+        <!-- Avatar Section -->
+        <div class="kb-profile-avatar-section">
+            @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+            {
+                <img src="@Model.ProfileImagePath" alt="@Model.FullName" class="kb-profile-avatar-lg" />
+            }
+            else
+            {
+                <div class="kb-profile-avatar-placeholder">
+                    @Model.FullName[0]
+                </div>
+            }
+            <h1 class="kb-profile-name">@Model.FullName</h1>
+            <p class="kb-profile-subtitle">@(Model.JobTitle ?? "Employee") · @(Model.Department ?? "—")</p>
+            <div class="kb-profile-roles">
+                @foreach (var role in Model.Roles)
+                {
+                    <span class="kb-badge kb-badge-primary">@role</span>
+                }
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="kb-stats-grid">
+            <div class="kb-stat-item">
+                <div class="kb-stat-value">@Model.DocumentCount</div>
+                <div class="kb-stat-label">Documents</div>
+            </div>
+            <div class="kb-stat-item">
+                <div class="kb-stat-value">@Model.BlogPostCount</div>
+                <div class="kb-stat-label">Blog Posts</div>
+            </div>
+            <div class="kb-stat-item">
+                <div class="kb-stat-value">@Model.CreatedAt.ToString("dd.MM.yyyy")</div>
+                <div class="kb-stat-label">Member Since</div>
+            </div>
+            <div class="kb-stat-item">
+                <div class="kb-stat-value">@(Model.LastLoginDate?.ToString("dd.MM.yyyy") ?? "—")</div>
+                <div class="kb-stat-label">Last Login</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information Panel -->
+    <div class="kb-panel" style="margin-top: 1.5rem;">
+        <h3 class="kb-panel-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profile Information
+        </h3>
+        <div class="kb-info-grid">
+            <div class="kb-info-item">
+                <div class="kb-info-label">Full Name</div>
+                <div class="kb-info-value">@Model.FullName</div>
+            </div>
+            <div class="kb-info-item">
+                <div class="kb-info-label">Email</div>
+                <div class="kb-info-value">@Model.Email</div>
+            </div>
+            <div class="kb-info-item">
+                <div class="kb-info-label">Department</div>
+                <div class="kb-info-value">@(Model.Department ?? "—")</div>
+            </div>
+            <div class="kb-info-item">
+                <div class="kb-info-label">Job Title</div>
+                <div class="kb-info-value">@(Model.JobTitle ?? "—")</div>
+            </div>
+        </div>
+
+        <div class="kb-action-buttons">
+            <a asp-action="Edit" class="kb-btn kb-btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                Edit Profile
+            </a>
+            <a asp-action="NotificationSettings" class="kb-btn kb-btn-outline" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                Notification Settings
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,106 @@
+@model CorporateKnowledgeBase.Application.Features.BlogPosts.CreateBlogPostCommand
+@{
+    var categories = ViewBag.Categories as List<CorporateKnowledgeBase.Application.Features.Categories.CategoryDto>;
+    var departments = ViewBag.Departments as List<CorporateKnowledgeBase.Application.Features.Departments.DepartmentDto>;
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h2>New Blog Post</h2>
+            <p style="color: var(--text-muted); margin: 0;">Share your knowledge with the team.</p>
+        </div>
+    </div>
+
+    <div class="kb-form-card">
+        <form asp-action="Create" method="post">
+            <input type="hidden" asp-for="AuthorId" value="@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value" />
+
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Title</label>
+                        <input asp-for="Title" class="kb-form-control" placeholder="Enter blog post title..." required />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Content (HTML)</label>
+                        <textarea asp-for="Content" class="kb-form-control" rows="15" placeholder="Write your blog post content..." required></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                        <small class="text-muted">You can use HTML for formatting.</small>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Category</label>
+                        <select asp-for="CategoryId" class="kb-form-control" required>
+                            <option value="">Select a category...</option>
+                            @foreach (var cat in categories!)
+                            {
+                                <option value="@cat.Id">@cat.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Department (optional)</label>
+                        <select asp-for="DepartmentId" class="kb-form-control">
+                            <option value="">All departments (public)</option>
+                            @if (departments != null)
+                            {
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Restrict access to a specific department, or leave empty for all.</small>
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Tags</label>
+                        <input id="tagsInput" name="TagsInput" class="kb-form-control" placeholder="Type to add tags..." />
+                        <small class="text-muted">Add relevant tags to help users find this post.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="kb-btn kb-btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right: 0.35rem;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Blog Post
+                </button>
+                <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@yaireo/tagify/dist/tagify.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@@yaireo/tagify"></script>
+    <script>
+        var input = document.getElementById('tagsInput');
+        var tagify = new Tagify(input, {
+            whitelist: [],
+            dropdown: {
+                maxItems: 20,
+                enabled: 1,
+                closeOnSelect: false
+            }
+        });
+
+        tagify.on('input', function (e) {
+            var value = e.detail.value;
+            tagify.whitelist = null;
+            fetch('/api/TagsApi/search?term=' + encodeURIComponent(value))
+                .then(r => r.json())
+                .then(function (tags) {
+                    tagify.whitelist = tags.map(t => t.value);
+                    tagify.dropdown.show(value);
+                });
+        });
+    </script>
+}

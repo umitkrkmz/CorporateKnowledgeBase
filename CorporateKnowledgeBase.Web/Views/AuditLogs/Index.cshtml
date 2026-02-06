@@ -1,0 +1,181 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@model PagedResult<CorporateKnowledgeBase.Application.Features.AuditLogs.AuditLogDto>
+
+@{
+    var search = ViewBag.Search as string ?? "";
+    var actionFilter = ViewBag.Action as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortDesc = (bool)(ViewBag.SortDesc ?? true);
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <h2>Audit Logs</h2>
+        <span class="kb-badge kb-badge-muted">@Model.TotalCount total entries</span>
+    </div>
+
+    <!-- Search and Filter Toolbar -->
+    <div class="kb-table-toolbar">
+        <form method="get" class="kb-toolbar-search">
+            <div class="kb-search-input-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="@search" class="kb-search-input"
+                       placeholder="Search by user, entity, or action..." />
+            </div>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <input type="hidden" name="action" value="@actionFilter" />
+            <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(actionFilter))
+            {
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+            }
+        </form>
+
+        <div class="kb-toolbar-right">
+            <div class="kb-filter-group">
+                <label class="kb-filter-label">Action</label>
+                <select name="action" class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=@pageSize&action=' + this.value">
+                    <option value="">All Actions</option>
+                    <option value="Create" selected="@(actionFilter == "Create")">Create</option>
+                    <option value="Update" selected="@(actionFilter == "Update")">Update</option>
+                    <option value="Delete" selected="@(actionFilter == "Delete")">Delete</option>
+                </select>
+            </div>
+
+            <div class="kb-page-size">
+                <label class="kb-filter-label">Show</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&action=@actionFilter&pageSize=' + this.value">
+                    <option value="10" selected="@(pageSize == 10)">10</option>
+                    <option value="25" selected="@(pageSize == 25)">25</option>
+                    <option value="50" selected="@(pageSize == 50)">50</option>
+                    <option value="100" selected="@(pageSize == 100)">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="kb-empty-state">
+            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(actionFilter))
+            {
+                <p>No audit logs match your search criteria.</p>
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-outline">Clear Filters</a>
+            }
+            else
+            {
+                <p>No audit logs found.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="kb-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?search=@search&action=@actionFilter&pageSize=@pageSize&sortBy=createdAt&sortDesc=@(!sortDesc)" class="kb-sort-link @(string.IsNullOrEmpty(sortBy) || sortBy == "createdAt" ? "active" : "")">
+                                Date
+                                @if (string.IsNullOrEmpty(sortBy) || sortBy == "createdAt")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        @if (sortDesc)
+                                        {
+                                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                                        }
+                                        else
+                                        {
+                                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                                        }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?search=@search&action=@actionFilter&pageSize=@pageSize&sortBy=userName&sortDesc=@(sortBy == "userName" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "userName" ? "active" : "")">
+                                User
+                                @if (sortBy == "userName")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        @if (sortDesc)
+                                        {
+                                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                                        }
+                                        else
+                                        {
+                                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                                        }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?search=@search&action=@actionFilter&pageSize=@pageSize&sortBy=action&sortDesc=@(sortBy == "action" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "action" ? "active" : "")">
+                                Action
+                                @if (sortBy == "action")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        @if (sortDesc)
+                                        {
+                                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                                        }
+                                        else
+                                        {
+                                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                                        }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?search=@search&action=@actionFilter&pageSize=@pageSize&sortBy=entityName&sortDesc=@(sortBy == "entityName" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "entityName" ? "active" : "")">
+                                Entity
+                                @if (sortBy == "entityName")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        @if (sortDesc)
+                                        {
+                                            <path d="M12 5v14M5 12l7 7 7-7"/>
+                                        }
+                                        else
+                                        {
+                                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                                        }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var log in Model.Items)
+                    {
+                        var actionBadge = log.Action switch
+                        {
+                            "Create" => "kb-badge-success",
+                            "Update" or "Edit" => "kb-badge-warning",
+                            "Delete" => "kb-badge-danger",
+                            _ => "kb-badge-muted"
+                        };
+                        <tr>
+                            <td style="white-space: nowrap;">@log.CreatedAt.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                            <td style="font-weight: 500; color: var(--text-dark);">@log.UserName</td>
+                            <td><span class="kb-badge @actionBadge">@log.Action</span></td>
+                            <td>@log.EntityName</td>
+                            <td><code style="font-size: 0.8rem; background: var(--bg-surface); padding: 2px 6px; border-radius: 4px;">@log.EntityId</code></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        var queryString = $"&search={search}&action={actionFilter}&pageSize={pageSize}&sortBy={sortBy}&sortDesc={sortDesc}";
+        <partial name="_Pagination" model="@(new { Model.Page, Model.TotalPages, Model.TotalCount, BaseUrl = Url.Action("Index"), QueryString = queryString })" />
+    }
+</div>

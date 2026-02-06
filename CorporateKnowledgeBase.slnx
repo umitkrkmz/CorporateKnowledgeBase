@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CorporateKnowledgeBase.Application/CorporateKnowledgeBase.Application.csproj" Id="9027de97-5b2a-4c9c-bd86-d8535854e319" />
+  <Project Path="CorporateKnowledgeBase.Domain/CorporateKnowledgeBase.Domain.csproj" Id="a8fb2909-0f72-47b6-84f7-131bb6c3546e" />
+  <Project Path="CorporateKnowledgeBase.Infrastructure/CorporateKnowledgeBase.Infrastructure.csproj" Id="f9166d99-9778-4dc4-a36a-1c3943ecbb59" />
+  <Project Path="CorporateKnowledgeBase.Web/CorporateKnowledgeBase.Web.csproj" Id="c903185e-4bc6-4af8-8d27-6a476f313c74" />
+</Solution>

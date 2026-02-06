@@ -1,0 +1,23 @@
+@model CorporateKnowledgeBase.Application.Features.Departments.CreateDepartmentCommand
+
+<div class="kb-page-header">
+    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Create Department</h2>
+</div>
+
+<div class="kb-form-card">
+    <form asp-action="Create" method="post">
+        <div class="kb-form-group">
+            <label class="kb-form-label">Name</label>
+            <input asp-for="Name" class="kb-form-control" required />
+        </div>
+        <div class="kb-form-group">
+            <label class="kb-form-label">Description</label>
+            <textarea asp-for="Description" class="kb-form-control" rows="3"></textarea>
+            <span class="kb-form-hint">Optional. Describe the purpose of this department.</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 0.5rem;">
+            <button type="submit" class="kb-btn kb-btn-primary">Create</button>
+            <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

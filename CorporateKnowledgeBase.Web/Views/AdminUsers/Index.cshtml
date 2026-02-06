@@ -1,0 +1,208 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@model PagedResult<CorporateKnowledgeBase.Application.Features.Users.UserDto>
+
+@{
+    var search = ViewBag.Search as string ?? "";
+    var statusFilter = ViewBag.Status as string ?? "";
+    var roleFilter = ViewBag.Role as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortDesc = (bool)(ViewBag.SortDesc ?? true);
+    var pageSize = (int)(ViewBag.PageSize ?? 10);
+
+    var pendingUsers = Model.Items.Where(u => !u.IsApproved).ToList();
+    var approvedUsers = Model.Items.Where(u => u.IsApproved).ToList();
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <h2>User Management</h2>
+        <span class="kb-badge kb-badge-muted">@Model.TotalCount users</span>
+    </div>
+
+    @if (TempData["Success"] is string msg)
+    {
+        <div class="kb-alert kb-alert-success" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
+        </div>
+    }
+
+    <!-- Search and Filter Toolbar -->
+    <div class="kb-table-toolbar">
+        <form method="get" class="kb-toolbar-search">
+            <div class="kb-search-input-wrapper">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" name="search" value="@search" class="kb-search-input"
+                       placeholder="Search by name, email, or department..." />
+            </div>
+            <input type="hidden" name="pageSize" value="@pageSize" />
+            <input type="hidden" name="status" value="@statusFilter" />
+            <input type="hidden" name="role" value="@roleFilter" />
+            <button type="submit" class="kb-btn kb-btn-outline kb-btn-sm">Search</button>
+            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(statusFilter) || !string.IsNullOrWhiteSpace(roleFilter))
+            {
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-sm" style="color: var(--text-muted);">Clear</a>
+            }
+        </form>
+
+        <div class="kb-toolbar-right">
+            <div class="kb-filter-group">
+                <label class="kb-filter-label">Status</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=@pageSize&role=@roleFilter&status=' + this.value">
+                    <option value="">All</option>
+                    <option value="pending" selected="@(statusFilter == "pending")">Pending</option>
+                    <option value="approved" selected="@(statusFilter == "approved")">Approved</option>
+                </select>
+            </div>
+
+            <div class="kb-filter-group">
+                <label class="kb-filter-label">Role</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&pageSize=@pageSize&status=@statusFilter&role=' + this.value">
+                    <option value="">All Roles</option>
+                    <option value="Admin" selected="@(roleFilter == "Admin")">Admin</option>
+                    <option value="Editor" selected="@(roleFilter == "Editor")">Editor</option>
+                    <option value="Member" selected="@(roleFilter == "Member")">Member</option>
+                </select>
+            </div>
+
+            <div class="kb-page-size">
+                <label class="kb-filter-label">Show</label>
+                <select class="kb-filter-select" onchange="window.location.href='?search=@search&status=@statusFilter&role=@roleFilter&pageSize=' + this.value">
+                    <option value="10" selected="@(pageSize == 10)">10</option>
+                    <option value="25" selected="@(pageSize == 25)">25</option>
+                    <option value="50" selected="@(pageSize == 50)">50</option>
+                    <option value="100" selected="@(pageSize == 100)">100</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (pendingUsers.Any())
+    {
+        <div class="kb-panel" style="border-left: 4px solid #e8a020; margin-bottom: 1.5rem;">
+            <div class="kb-panel-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                Pending Approval
+                <span class="kb-badge kb-badge-warning">@pendingUsers.Count</span>
+            </div>
+            <div class="kb-table" style="margin-top: 1rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Registration Date</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in pendingUsers)
+                        {
+                            <tr>
+                                <td style="font-weight: 600; color: var(--text-dark);">@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>@(user.Department ?? "-")</td>
+                                <td>@user.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <form asp-action="Approve" asp-route-id="@user.Id" method="post" style="display: inline;">
+                                            <button type="submit" class="kb-btn kb-btn-success kb-btn-sm">Approve</button>
+                                        </form>
+                                        <form asp-action="Reject" asp-route-id="@user.Id" method="post" style="display: inline;"
+                                              onsubmit="return confirm('Are you sure you want to reject and remove this user?');">
+                                            <button type="submit" class="kb-btn kb-btn-danger kb-btn-sm">Reject</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <h4 style="font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1rem;">All Users</h4>
+
+    @if (!approvedUsers.Any() && !pendingUsers.Any())
+    {
+        <div class="kb-empty-state">
+            @if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(statusFilter) || !string.IsNullOrWhiteSpace(roleFilter))
+            {
+                <p>No users match your search criteria.</p>
+                <a href="@Url.Action("Index")" class="kb-btn kb-btn-outline">Clear Filters</a>
+            }
+            else
+            {
+                <p>No users found.</p>
+            }
+        </div>
+    }
+    else if (approvedUsers.Any())
+    {
+        <div class="kb-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?search=@search&status=@statusFilter&role=@roleFilter&pageSize=@pageSize&sortBy=fullname&sortDesc=@(sortBy == "fullname" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "fullname" ? "active" : "")">
+                                Full Name
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?search=@search&status=@statusFilter&role=@roleFilter&pageSize=@pageSize&sortBy=email&sortDesc=@(sortBy == "email" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "email" ? "active" : "")">
+                                Email
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?search=@search&status=@statusFilter&role=@roleFilter&pageSize=@pageSize&sortBy=department&sortDesc=@(sortBy == "department" ? !sortDesc : false)" class="kb-sort-link @(sortBy == "department" ? "active" : "")">
+                                Department
+                            </a>
+                        </th>
+                        <th>Status</th>
+                        <th>Roles</th>
+                        <th>
+                            <a href="?search=@search&status=@statusFilter&role=@roleFilter&pageSize=@pageSize&sortBy=createdAt&sortDesc=@(string.IsNullOrEmpty(sortBy) || sortBy == "createdAt" ? !sortDesc : true)" class="kb-sort-link @(string.IsNullOrEmpty(sortBy) || sortBy == "createdAt" ? "active" : "")">
+                                Registration Date
+                            </a>
+                        </th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in approvedUsers)
+                    {
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-dark);">@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@(user.Department ?? "-")</td>
+                            <td><span class="kb-badge kb-badge-success">Approved</span></td>
+                            <td>
+                                @foreach (var role in user.Roles)
+                                {
+                                    var badgeClass = role switch
+                                    {
+                                        "Admin" => "kb-badge-danger",
+                                        "Editor" => "kb-badge-primary",
+                                        _ => "kb-badge-muted"
+                                    };
+                                    <span class="kb-badge @badgeClass">@role</span>
+                                }
+                            </td>
+                            <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
+                            <td>
+                                <a asp-action="EditRoles" asp-route-id="@user.Id" class="kb-btn kb-btn-outline kb-btn-sm">Edit Roles</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        var queryString = $"&search={search}&status={statusFilter}&role={roleFilter}&pageSize={pageSize}&sortBy={sortBy}&sortDesc={sortDesc}";
+        <partial name="_Pagination" model="@(new { Model.Page, Model.TotalPages, Model.TotalCount, BaseUrl = Url.Action("Index"), QueryString = queryString })" />
+    }
+</div>

@@ -1,0 +1,101 @@
+@model List<CorporateKnowledgeBase.Web.Controllers.PendingContentItem>
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <h2>Content Review</h2>
+        <span class="kb-badge kb-badge-muted">Review and approve pending content submissions</span>
+    </div>
+
+    @if (TempData["Success"] is string msg)
+    {
+        <div class="kb-alert kb-alert-success" style="display: flex; align-items: center; justify-content: space-between;">
+            <span>@msg</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="font-size: 0.75rem;"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="kb-empty-state">
+            <p>No content pending review. All caught up!</p>
+        </div>
+    }
+    else
+    {
+        <div class="kb-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Submitted</th>
+                        <th style="width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var typeBadge = item.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.Document
+                            ? "kb-badge-primary" : "kb-badge-success";
+                        var typeName = item.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.Document
+                            ? "Document" : "Blog Post";
+                        var detailsController = item.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.Document
+                            ? "Documents" : "BlogPosts";
+
+                        <tr>
+                            <td>
+                                <a asp-controller="@detailsController" asp-action="Details" asp-route-id="@item.Id"
+                                   style="color: var(--brand-primary); text-decoration: none; font-weight: 600;">
+                                    @item.Title
+                                </a>
+                            </td>
+                            <td><span class="kb-badge @typeBadge">@typeName</span></td>
+                            <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <form asp-action="Approve" method="post" style="display: inline;">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="contentType" value="@((int)item.ContentType)" />
+                                        <button type="submit" class="kb-btn kb-btn-success kb-btn-sm">Approve</button>
+                                    </form>
+
+                                    <button class="kb-btn kb-btn-danger kb-btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#rejectModal-@item.ContentType-@item.Id">
+                                        Reject
+                                    </button>
+                                </div>
+
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal-@item.ContentType-@item.Id" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form asp-action="Reject" method="post">
+                                                <input type="hidden" name="id" value="@item.Id" />
+                                                <input type="hidden" name="contentType" value="@((int)item.ContentType)" />
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Reject: @item.Title</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="kb-form-group">
+                                                        <label class="kb-form-label">Reason for rejection</label>
+                                                        <textarea name="reason" class="kb-form-control" rows="3" required
+                                                                  placeholder="Explain why this content is being rejected..."></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="kb-btn kb-btn-outline" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="kb-btn kb-btn-danger">Reject</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

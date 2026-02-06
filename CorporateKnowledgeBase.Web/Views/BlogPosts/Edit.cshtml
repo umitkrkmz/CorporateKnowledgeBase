@@ -1,0 +1,113 @@
+@model CorporateKnowledgeBase.Application.Features.BlogPosts.BlogPostDetailDto
+@{
+    var categories = ViewBag.Categories as List<CorporateKnowledgeBase.Application.Features.Categories.CategoryDto>;
+    var departments = ViewBag.Departments as List<CorporateKnowledgeBase.Application.Features.Departments.DepartmentDto>;
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h2>Edit Blog Post</h2>
+            <p style="color: var(--text-muted); margin: 0;">Update blog post content and settings.</p>
+        </div>
+    </div>
+
+    <div class="kb-form-card">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Title</label>
+                        <input name="title" class="kb-form-control" value="@Model.Title" required />
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Content (HTML)</label>
+                        <textarea name="content" class="kb-form-control" rows="15" required>@Model.Content</textarea>
+                        <small class="text-muted">You can use HTML for formatting.</small>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Category</label>
+                        <select name="categoryId" class="kb-form-control" required>
+                            @foreach (var cat in categories!)
+                            {
+                                <option value="@cat.Id" selected="@(cat.Id == Model.CategoryId ? "selected" : null)">@cat.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Department (optional)</label>
+                        <select name="departmentId" class="kb-form-control">
+                            <option value="">All departments (public)</option>
+                            @if (departments != null)
+                            {
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Restrict access to a specific department, or leave empty for all.</small>
+                    </div>
+
+                    <div class="kb-form-group">
+                        <label class="kb-form-label">Tags</label>
+                        <input id="tagsInput" name="tagsInput" class="kb-form-control" placeholder="Type to add tags..." />
+                    </div>
+
+                    <div class="kb-panel" style="margin-top: 1.5rem; background: var(--bg-surface); padding: 1rem;">
+                        <h6 style="margin: 0 0 0.75rem; font-size: 0.85rem; color: var(--text-dark);">Post Info</h6>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;">
+                            <div><strong>Status:</strong> @Model.Status</div>
+                            <div><strong>Created:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                            <div><strong>Views:</strong> @Model.ViewCount</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="kb-btn kb-btn-primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right: 0.35rem;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Update Blog Post
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="kb-btn kb-btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@yaireo/tagify/dist/tagify.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@@yaireo/tagify"></script>
+    <script>
+        var input = document.getElementById('tagsInput');
+        var tagify = new Tagify(input, {
+            whitelist: [],
+            dropdown: {
+                maxItems: 20,
+                enabled: 1,
+                closeOnSelect: false
+            }
+        });
+
+        // Load existing tags
+        var existingTags = @Html.Raw(ViewBag.ExistingTags ?? "[]");
+        tagify.addTags(existingTags);
+
+        tagify.on('input', function (e) {
+            var value = e.detail.value;
+            tagify.whitelist = null;
+            fetch('/api/TagsApi/search?term=' + encodeURIComponent(value))
+                .then(r => r.json())
+                .then(function (tags) {
+                    tagify.whitelist = tags.map(t => t.value);
+                    tagify.dropdown.show(value);
+                });
+        });
+    </script>
+}

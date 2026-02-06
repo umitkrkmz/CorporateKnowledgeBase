@@ -1,0 +1,23 @@
+@model CorporateKnowledgeBase.Application.Features.Departments.DepartmentDto
+
+<div class="kb-page-header">
+    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Edit Department</h2>
+</div>
+
+<div class="kb-form-card">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <div class="kb-form-group">
+            <label class="kb-form-label">Name</label>
+            <input name="Name" class="kb-form-control" value="@Model.Name" required />
+        </div>
+        <div class="kb-form-group">
+            <label class="kb-form-label">Description</label>
+            <textarea name="Description" class="kb-form-control" rows="3">@Model.Description</textarea>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding-top: 0.5rem;">
+            <button type="submit" class="kb-btn kb-btn-primary">Save</button>
+            <a asp-action="Index" class="kb-btn kb-btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

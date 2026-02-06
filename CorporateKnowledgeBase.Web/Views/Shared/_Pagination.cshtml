@@ -1,0 +1,188 @@
+@model dynamic
+
+@{
+    int page = Model.Page;
+    int totalPages = Model.TotalPages;
+    int totalCount = Model.TotalCount;
+    string baseUrl = Model.BaseUrl ?? "";
+    string queryString = Model.QueryString ?? "";
+}
+
+@if (totalPages > 1)
+{
+    <nav class="kb-pagination-nav" aria-label="Pagination">
+        <div class="kb-pagination-info">
+            Showing page <strong>@(page)</strong> of <strong>@(totalPages)</strong>
+            <span class="kb-pagination-total">(@totalCount total items)</span>
+        </div>
+        <ul class="kb-pagination">
+            @* First Page *@
+            <li class="kb-pagination-item @(page == 1 ? "disabled" : "")">
+                <a href="@baseUrl?page=1@queryString" class="kb-pagination-link" @(page == 1 ? "tabindex=-1 aria-disabled=true" : "")>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="11 17 6 12 11 7"></polyline>
+                        <polyline points="18 17 13 12 18 7"></polyline>
+                    </svg>
+                </a>
+            </li>
+
+            @* Previous Page *@
+            <li class="kb-pagination-item @(page == 1 ? "disabled" : "")">
+                <a href="@baseUrl?page=@(page - 1)@queryString" class="kb-pagination-link" @(page == 1 ? "tabindex=-1 aria-disabled=true" : "")>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </a>
+            </li>
+
+            @* Page Numbers *@
+            @{
+                int startPage = Math.Max(1, page - 2);
+                int endPage = Math.Min(totalPages, page + 2);
+
+                if (startPage > 1)
+                {
+                    <li class="kb-pagination-item">
+                        <a href="@baseUrl?page=1@queryString" class="kb-pagination-link">1</a>
+                    </li>
+                    if (startPage > 2)
+                    {
+                        <li class="kb-pagination-ellipsis">...</li>
+                    }
+                }
+
+                for (int i = startPage; i <= endPage; i++)
+                {
+                    <li class="kb-pagination-item @(i == page ? "active" : "")">
+                        <a href="@baseUrl?page=@i@queryString" class="kb-pagination-link">@i</a>
+                    </li>
+                }
+
+                if (endPage < totalPages)
+                {
+                    if (endPage < totalPages - 1)
+                    {
+                        <li class="kb-pagination-ellipsis">...</li>
+                    }
+                    <li class="kb-pagination-item">
+                        <a href="@baseUrl?page=@totalPages@queryString" class="kb-pagination-link">@totalPages</a>
+                    </li>
+                }
+            }
+
+            @* Next Page *@
+            <li class="kb-pagination-item @(page == totalPages ? "disabled" : "")">
+                <a href="@baseUrl?page=@(page + 1)@queryString" class="kb-pagination-link" @(page == totalPages ? "tabindex=-1 aria-disabled=true" : "")>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </a>
+            </li>
+
+            @* Last Page *@
+            <li class="kb-pagination-item @(page == totalPages ? "disabled" : "")">
+                <a href="@baseUrl?page=@totalPages@queryString" class="kb-pagination-link" @(page == totalPages ? "tabindex=-1 aria-disabled=true" : "")>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="13 17 18 12 13 7"></polyline>
+                        <polyline points="6 17 11 12 6 7"></polyline>
+                    </svg>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+
+<style>
+    .kb-pagination-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .kb-pagination-info {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .kb-pagination-total {
+        margin-left: 0.25rem;
+    }
+
+    .kb-pagination {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .kb-pagination-item {
+        display: flex;
+    }
+
+    .kb-pagination-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-body);
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+
+    .kb-pagination-link:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+    }
+
+    .kb-pagination-item.active .kb-pagination-link {
+        background: var(--brand-primary);
+        border-color: var(--brand-primary);
+        color: white;
+    }
+
+    .kb-pagination-item.disabled .kb-pagination-link {
+        opacity: 0.5;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    .kb-pagination-ellipsis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+
+    @@media (max-width: 576px) {
+        .kb-pagination-nav {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .kb-pagination {
+            justify-content: center;
+        }
+
+        .kb-pagination-info {
+            text-align: center;
+        }
+    }
+</style>

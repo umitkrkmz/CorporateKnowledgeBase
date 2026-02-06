@@ -1,0 +1,149 @@
+@model CorporateKnowledgeBase.Application.Features.Reports.ReportDetailDto
+
+<div class="kb-page-header">
+    <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text-dark);">Report #@Model.Id</h2>
+    <a asp-action="Index" class="kb-btn kb-btn-outline">&#8592; Back to List</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 360px; gap: 1.5rem; align-items: start;">
+    <!-- Report Information -->
+    <div class="kb-panel">
+        <div class="kb-panel-title">Report Information</div>
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 0.75rem 1rem; margin-top: 1rem;">
+            <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Reporter</span>
+            <span style="color: var(--text-dark);">@Model.ReporterName</span>
+
+            <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Date</span>
+            <span style="color: var(--text-dark);">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</span>
+
+            <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Reason</span>
+            <span><span class="kb-badge kb-badge-danger">@Model.Reason</span></span>
+
+            <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Content Type</span>
+            <span>
+                @if (Model.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.Document)
+                {
+                    <span class="kb-badge kb-badge-primary">Document</span>
+                }
+                else if (Model.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.BlogPost)
+                {
+                    <span class="kb-badge kb-badge-primary">Blog Post</span>
+                }
+                else
+                {
+                    <span class="kb-badge kb-badge-muted">Announcement</span>
+                }
+            </span>
+
+            <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Reported Content</span>
+            <span>
+                @if (Model.ContentTitle is not null)
+                {
+                    @if (Model.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.Document)
+                    {
+                        <a href="@Url.Action("Details", "Documents", new { id = Model.ContentId })" target="_blank"
+                           style="color: var(--brand-primary); text-decoration: none; font-weight: 500;">
+                            @Model.ContentTitle &#8599;
+                        </a>
+                    }
+                    else if (Model.ContentType == CorporateKnowledgeBase.Domain.Enums.ContentType.BlogPost)
+                    {
+                        <a href="@Url.Action("Details", "BlogPosts", new { id = Model.ContentId })" target="_blank"
+                           style="color: var(--brand-primary); text-decoration: none; font-weight: 500;">
+                            @Model.ContentTitle &#8599;
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Details", "Announcements", new { id = Model.ContentId })" target="_blank"
+                           style="color: var(--brand-primary); text-decoration: none; font-weight: 500;">
+                            @Model.ContentTitle &#8599;
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span style="color: #c0392b; font-weight: 500;">Content Deleted or Not Found</span>
+                }
+            </span>
+
+            @if (Model.ReviewedAt.HasValue)
+            {
+                <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Reviewed At</span>
+                <span style="color: var(--text-dark);">@Model.ReviewedAt.Value.ToString("dd.MM.yyyy HH:mm")</span>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.AdminNotes))
+            {
+                <span style="font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Admin Notes</span>
+                <span>
+                    <div style="padding: 0.625rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-body);">
+                        @Model.AdminNotes
+                    </div>
+                </span>
+            }
+        </div>
+    </div>
+
+    <!-- Status & Actions -->
+    <div class="kb-panel" style="text-align: center;">
+        <div class="kb-panel-title" style="text-align: left;">Status & Actions</div>
+        @if (Model.Status == CorporateKnowledgeBase.Domain.Enums.ReportStatus.Pending)
+        {
+            <div style="padding: 1.5rem 0 1rem;">
+                <div style="font-size: 2.5rem; color: #e8a020;">&#9888;</div>
+                <h5 style="margin-top: 0.5rem; font-weight: 600; color: var(--text-dark);">Pending Review</h5>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <form asp-action="Review" asp-route-id="@Model.Id" method="post" style="margin-bottom: 1rem;">
+                    <div style="margin-bottom: 0.75rem;">
+                        <textarea name="adminNotes" class="kb-form-control" rows="2" placeholder="Resolution note..." style="text-align: left;"></textarea>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button type="submit" name="status" value="Reviewed" class="kb-btn kb-btn-success" style="width: 100%;">
+                            &#10003; Mark as Reviewed
+                        </button>
+                        <button type="submit" name="status" value="Dismissed" class="kb-btn kb-btn-outline" style="width: 100%;">
+                            Dismiss Report
+                        </button>
+                    </div>
+                </form>
+
+                @if (Model.ContentTitle is not null)
+                {
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <form asp-action="DeleteContent" asp-route-id="@Model.Id" method="post"
+                              onsubmit="return confirm('WARNING: This will permanently delete the content and close the report. This cannot be undone. Are you sure?');">
+                            <button type="submit" class="kb-btn kb-btn-danger" style="width: 100%;">
+                                &#128465; Delete Content & Close Report
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        }
+        else if (Model.Status == CorporateKnowledgeBase.Domain.Enums.ReportStatus.Reviewed)
+        {
+            <div style="padding: 1.5rem 0 1rem;">
+                <div style="font-size: 2.5rem; color: #27ae60;">&#10004;</div>
+                <h5 style="margin-top: 0.5rem; font-weight: 600; color: #27ae60;">Reviewed</h5>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.AdminNotes))
+            {
+                <p style="color: var(--text-muted);"><strong>Note:</strong> @Model.AdminNotes</p>
+            }
+        }
+        else
+        {
+            <div style="padding: 1.5rem 0 1rem;">
+                <div style="font-size: 2.5rem; color: var(--text-muted);">&#10006;</div>
+                <h5 style="margin-top: 0.5rem; font-weight: 600; color: var(--text-muted);">Dismissed</h5>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.AdminNotes))
+            {
+                <p style="color: var(--text-muted);"><strong>Note:</strong> @Model.AdminNotes</p>
+            }
+        }
+    </div>
+</div>

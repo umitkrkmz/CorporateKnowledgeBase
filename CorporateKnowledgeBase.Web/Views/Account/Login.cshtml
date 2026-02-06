@@ -1,0 +1,283 @@
+@model CorporateKnowledgeBase.Web.Models.AuthViewModel
+@{
+    ViewData["Title"] = "Welcome";
+    Layout = "_Layout";
+}
+
+<div class="auth-page">
+    <div class="auth-container @(Model.ShowRegister ? "register-mode" : "")" id="authContainer">
+
+        <!-- ===== FORM AREA ===== -->
+        <div class="auth-forms">
+
+            <!-- LOGIN PANEL -->
+            <div class="form-panel @(Model.ShowRegister ? "" : "active")" id="loginPanel">
+
+                @if (TempData["RegistrationSuccess"] is string successMsg)
+                {
+                    <div class="auth-alert auth-alert-success">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+                        @successMsg
+                    </div>
+                }
+
+                @if (TempData["PendingApproval"] is string pendingMsg)
+                {
+                    <div class="auth-alert auth-alert-warning">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M8 4a.905.905 0 0 1 .9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg>
+                        @pendingMsg
+                    </div>
+                }
+
+                <div class="form-title">Welcome Back</div>
+                <div class="form-subtitle">Sign in to continue to Knowledge Base</div>
+
+                <div asp-validation-summary="All" class="auth-alert auth-alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 && !Model.ShowRegister ? "flex" : "none")"></div>
+
+                <form asp-action="Login" method="post">
+                    <input type="hidden" asp-for="ShowRegister" value="false" />
+                    <input type="hidden" asp-for="Register.Email" value="" />
+                    <input type="hidden" asp-for="Register.Password" value="" />
+                    <input type="hidden" asp-for="Register.FullName" value="" />
+                    <input type="hidden" asp-for="Register.Department" value="" />
+
+                    <div class="auth-input-group">
+                        <label for="loginEmail">Email</label>
+                        <input asp-for="Login.Email" id="loginEmail" type="email" placeholder="you@@company.com" />
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="loginPassword">Password</label>
+                        <div class="password-wrapper">
+                            <input asp-for="Login.Password" id="loginPassword" type="password" placeholder="Enter your password" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword', this)" title="Show password">
+                                <svg class="eye-open" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                </svg>
+                                <svg class="eye-closed" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="display:none;">
+                                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-checkbox">
+                        <input asp-for="Login.RememberMe" id="loginRemember" type="checkbox" />
+                        <label for="loginRemember">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="auth-btn">Sign In</button>
+                </form>
+
+                <div class="auth-switch d-md-none">
+                    Don't have an account? <a onclick="showRegister()">Create one</a>
+                </div>
+            </div>
+
+            <!-- REGISTER PANEL -->
+            <div class="form-panel @(Model.ShowRegister ? "active" : "")" id="registerPanel">
+
+                <div class="auth-alert auth-alert-info">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.306-.044.07-.325 2.069-.38zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
+                    Your account will be activated after admin approval.
+                </div>
+
+                <div class="form-title">Create Account</div>
+                <div class="form-subtitle">Join the Knowledge Base community</div>
+
+                <div asp-validation-summary="All" class="auth-alert auth-alert-danger" style="display:@(ViewData.ModelState.ErrorCount > 0 && Model.ShowRegister ? "flex" : "none")"></div>
+
+                <form asp-action="Register" method="post">
+                    <input type="hidden" asp-for="ShowRegister" value="true" />
+                    <input type="hidden" asp-for="Login.Email" value="" />
+                    <input type="hidden" asp-for="Login.Password" value="" />
+                    <input type="hidden" asp-for="Login.RememberMe" value="false" />
+
+                    <div class="auth-input-group">
+                        <label for="regName">Full Name</label>
+                        <input asp-for="Register.FullName" id="regName" type="text" placeholder="John Doe" />
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="regEmail">Email</label>
+                        <input asp-for="Register.Email" id="regEmail" type="email" placeholder="you@@company.com" />
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="regDept">Department</label>
+                        <input asp-for="Register.Department" id="regDept" type="text" placeholder="Engineering, Marketing..." />
+                    </div>
+
+                    <div class="auth-input-group">
+                        <label for="regPassword">Password</label>
+                        <div class="password-wrapper">
+                            <input asp-for="Register.Password" id="regPassword" type="password" placeholder="Create a strong password" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)" title="Show password">
+                                <svg class="eye-open" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                </svg>
+                                <svg class="eye-closed" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="display:none;">
+                                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-btn">Create Account</button>
+                </form>
+
+                <div class="auth-switch d-md-none">
+                    Already have an account? <a onclick="showLogin()">Sign in</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SLIDING OVERLAY PANEL ===== -->
+        <div class="auth-overlay @(Model.ShowRegister ? "slide-left" : "")" id="overlayPanel">
+            <div class="overlay-content" id="overlayLogin" style="display: @(Model.ShowRegister ? "none" : "block");">
+                <div class="mascot-container">
+                    <div class="mascot-owl" id="mascotOwl">
+                        <div class="owl-ear-left"></div>
+                        <div class="owl-ear-right"></div>
+                        <div class="owl-body">
+                            <div class="owl-face">
+                                <div class="owl-eye"><div class="owl-pupil"></div></div>
+                                <div class="owl-eye"><div class="owl-pupil"></div></div>
+                            </div>
+                            <div class="owl-beak"></div>
+                            <div class="owl-hand-left"></div>
+                            <div class="owl-hand-right"></div>
+                        </div>
+                    </div>
+                </div>
+                <h2>New Here?</h2>
+                <p>Create an account and start exploring the corporate knowledge base with your team.</p>
+                <button class="overlay-btn" onclick="showRegister()">Create Account</button>
+            </div>
+
+            <div class="overlay-content" id="overlayRegister" style="display: @(Model.ShowRegister ? "block" : "none");">
+                <div class="mascot-container">
+                    <div class="mascot-owl" id="mascotOwl2">
+                        <div class="owl-ear-left"></div>
+                        <div class="owl-ear-right"></div>
+                        <div class="owl-body">
+                            <div class="owl-face">
+                                <div class="owl-eye"><div class="owl-pupil"></div></div>
+                                <div class="owl-eye"><div class="owl-pupil"></div></div>
+                            </div>
+                            <div class="owl-beak"></div>
+                            <div class="owl-hand-left"></div>
+                            <div class="owl-hand-right"></div>
+                        </div>
+                    </div>
+                </div>
+                <h2>Welcome Back!</h2>
+                <p>Already have an account? Sign in to access your documents, posts, and team knowledge.</p>
+                <button class="overlay-btn" onclick="showLogin()">Sign In</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var overlay = document.getElementById('overlayPanel');
+        var authContainer = document.getElementById('authContainer');
+        var loginPanel = document.getElementById('loginPanel');
+        var registerPanel = document.getElementById('registerPanel');
+        var overlayLogin = document.getElementById('overlayLogin');
+        var overlayRegister = document.getElementById('overlayRegister');
+
+        function showRegister() {
+            overlay.classList.add('slide-left');
+            authContainer.classList.add('register-mode');
+            loginPanel.classList.remove('active');
+            registerPanel.classList.add('active');
+            setTimeout(function() {
+                overlayLogin.style.display = 'none';
+                overlayRegister.style.display = 'block';
+            }, 300);
+        }
+
+        function showLogin() {
+            overlay.classList.remove('slide-left');
+            authContainer.classList.remove('register-mode');
+            registerPanel.classList.remove('active');
+            loginPanel.classList.add('active');
+            setTimeout(function() {
+                overlayRegister.style.display = 'none';
+                overlayLogin.style.display = 'block';
+            }, 300);
+        }
+
+        // === Owl Mascot ===
+        function getOwls() {
+            return document.querySelectorAll('.mascot-owl');
+        }
+
+        function owlHide() {
+            getOwls().forEach(function(owl) {
+                owl.classList.remove('peeking');
+                owl.classList.add('hiding');
+            });
+        }
+
+        function owlNormal() {
+            getOwls().forEach(function(owl) {
+                owl.classList.remove('hiding', 'peeking');
+            });
+        }
+
+        function owlPeek() {
+            getOwls().forEach(function(owl) {
+                owl.classList.remove('hiding');
+                owl.classList.add('peeking');
+            });
+        }
+
+        document.querySelectorAll('input[type="password"]').forEach(function(input) {
+            input.addEventListener('focus', owlHide);
+            input.addEventListener('blur', function() {
+                if (this.type === 'password') owlNormal();
+            });
+        });
+
+        function togglePassword(inputId, btn) {
+            var input = document.getElementById(inputId);
+            var eyeOpen = btn.querySelector('.eye-open');
+            var eyeClosed = btn.querySelector('.eye-closed');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+                owlPeek();
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+                if (document.activeElement === input) owlHide();
+                else owlNormal();
+            }
+        }
+
+        // Pupil tracking
+        document.querySelectorAll('input[type="email"], input[type="text"]').forEach(function(input) {
+            input.addEventListener('input', function() {
+                var shift = Math.min(this.value.length * 0.5, 4);
+                document.querySelectorAll('.owl-pupil').forEach(function(p) {
+                    p.style.transform = 'translateX(' + shift + 'px)';
+                });
+            });
+            input.addEventListener('blur', function() {
+                document.querySelectorAll('.owl-pupil').forEach(function(p) {
+                    p.style.transform = 'translateX(0)';
+                });
+            });
+        });
+    </script>
+}

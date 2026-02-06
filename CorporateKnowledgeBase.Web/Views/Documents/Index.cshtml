@@ -1,0 +1,269 @@
+@using CorporateKnowledgeBase.Application.Common.Models
+@using CorporateKnowledgeBase.Application.Features.Documents
+@model PagedResult<DocumentDto>
+@{
+    var currentTag = ViewBag.CurrentTag as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
+    var currentCategoryId = ViewBag.CurrentCategoryId as int?;
+    var currentSortBy = ViewBag.CurrentSortBy as string;
+    var currentSortDesc = ViewBag.CurrentSortDesc as bool? ?? false;
+    var currentPageSize = ViewBag.CurrentPageSize as int? ?? 10;
+    var categories = ViewBag.Categories as List<CorporateKnowledgeBase.Application.Features.Categories.CategoryDto> ?? new();
+
+    string SortLink(string column)
+    {
+        var isActive = currentSortBy == column;
+        var newDesc = isActive ? !currentSortDesc : false;
+        return Url.Action("Index", new { search = currentSearch, categoryId = currentCategoryId, tag = currentTag, sortBy = column, sortDesc = newDesc, pageSize = currentPageSize })!;
+    }
+}
+
+<div class="kb-admin-page">
+    <div class="kb-page-header">
+        <div>
+            <h1 style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Technical Documents
+            </h1>
+            <p style="color: var(--text-muted); margin: 0;">Browse and search through technical documentation</p>
+        </div>
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <a asp-action="Create" class="kb-btn kb-btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Document
+            </a>
+        }
+    </div>
+
+    <!-- Toolbar -->
+    <div class="kb-table-toolbar">
+        <div class="kb-toolbar-search">
+            <form asp-action="Index" method="get" style="display: flex; gap: 0.5rem; flex: 1;">
+                <input type="hidden" name="tag" value="@currentTag" />
+                <div class="kb-search-input-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" name="search" value="@currentSearch" class="kb-search-input" placeholder="Search documents..." />
+                </div>
+                <input type="hidden" name="categoryId" value="@currentCategoryId" />
+                <input type="hidden" name="pageSize" value="@currentPageSize" />
+                <button type="submit" class="kb-btn kb-btn-primary kb-btn-sm">Search</button>
+                @if (!string.IsNullOrEmpty(currentSearch) || currentCategoryId.HasValue || !string.IsNullOrEmpty(currentTag))
+                {
+                    <a asp-action="Index" class="kb-btn kb-btn-outline kb-btn-sm">Clear</a>
+                }
+            </form>
+        </div>
+        <div class="kb-toolbar-right">
+            <div class="kb-filter-group">
+                <span class="kb-filter-label">Category:</span>
+                <select class="kb-filter-select" onchange="window.location.href=this.value">
+                    <option value="@Url.Action("Index", new { search = currentSearch, tag = currentTag, pageSize = currentPageSize })">All Categories</option>
+                    @foreach (var cat in categories)
+                    {
+                        var isSelected = currentCategoryId == cat.Id;
+                        <option value="@Url.Action("Index", new { search = currentSearch, categoryId = cat.Id, tag = currentTag, pageSize = currentPageSize })" selected="@isSelected">@cat.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="kb-page-size">
+                <span class="kb-filter-label">Show:</span>
+                <select class="kb-filter-select" onchange="window.location.href=this.value">
+                    @foreach (var size in new[] { 10, 25, 50 })
+                    {
+                        var isSelected = currentPageSize == size;
+                        <option value="@Url.Action("Index", new { search = currentSearch, categoryId = currentCategoryId, tag = currentTag, pageSize = size })" selected="@isSelected">@size</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(currentTag))
+    {
+        <div class="kb-alert kb-alert-info" style="margin-bottom: 1rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <span>Filtered by tag: <strong>#@currentTag</strong></span>
+            <a asp-action="Index" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" class="kb-btn kb-btn-outline kb-btn-sm" style="margin-left: auto;">Clear tag filter</a>
+        </div>
+    }
+
+    @if (Model.Items.Any())
+    {
+        <div class="kb-table">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="@SortLink("title")" class="kb-sort-link @(currentSortBy == "title" ? "active" : "")">
+                                Title
+                                @if (currentSortBy == "title")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        @if (currentSortDesc) { <polyline points="18 15 12 9 6 15"/> } else { <polyline points="6 9 12 15 18 9"/> }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@SortLink("category")" class="kb-sort-link @(currentSortBy == "category" ? "active" : "")">
+                                Category
+                                @if (currentSortBy == "category")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        @if (currentSortDesc) { <polyline points="18 15 12 9 6 15"/> } else { <polyline points="6 9 12 15 18 9"/> }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>Tags</th>
+                        <th>
+                            <a href="@SortLink("views")" class="kb-sort-link @(currentSortBy == "views" ? "active" : "")">
+                                Views
+                                @if (currentSortBy == "views")
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        @if (currentSortDesc) { <polyline points="18 15 12 9 6 15"/> } else { <polyline points="6 9 12 15 18 9"/> }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@SortLink("date")" class="kb-sort-link @(currentSortBy == "date" || string.IsNullOrEmpty(currentSortBy) ? "active" : "")">
+                                Date
+                                @if (currentSortBy == "date" || string.IsNullOrEmpty(currentSortBy))
+                                {
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        @if (currentSortDesc) { <polyline points="18 15 12 9 6 15"/> } else { <polyline points="6 9 12 15 18 9"/> }
+                                    </svg>
+                                }
+                            </a>
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var doc in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@doc.Id" style="text-decoration: none; font-weight: 600; color: var(--text-dark);">@doc.Title</a>
+                                @if (doc.Status != CorporateKnowledgeBase.Domain.Enums.ContentStatus.Published)
+                                {
+                                    var sBadge = doc.Status switch
+                                    {
+                                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.Draft => "kb-badge-muted",
+                                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.PendingReview => "kb-badge-warning",
+                                        CorporateKnowledgeBase.Domain.Enums.ContentStatus.Rejected => "kb-badge-danger",
+                                        _ => "kb-badge-muted"
+                                    };
+                                    <span class="kb-badge @sBadge" style="margin-left: 0.4rem;">@doc.Status</span>
+                                }
+                            </td>
+                            <td><span class="kb-badge kb-badge-primary">@doc.CategoryName</span></td>
+                            <td>
+                                @foreach (var tag in doc.Tags.Take(3))
+                                {
+                                    <a asp-action="Index" asp-route-tag="@tag" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId"
+                                       class="kb-badge kb-badge-tag" style="margin-right: 0.25rem;">#@tag</a>
+                                }
+                                @if (doc.Tags.Count > 3)
+                                {
+                                    <span class="kb-badge kb-badge-muted">+@(doc.Tags.Count - 3)</span>
+                                }
+                            </td>
+                            <td>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    @doc.ViewCount
+                                </span>
+                            </td>
+                            <td><span style="color: var(--text-muted); font-size: 0.85rem;">@doc.CreatedAt.ToString("dd.MM.yyyy")</span></td>
+                            <td><a asp-action="Details" asp-route-id="@doc.Id" class="kb-btn kb-btn-outline kb-btn-sm">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="color: var(--text-muted); font-size: 0.85rem;">
+                    Showing @((Model.Page - 1) * Model.PageSize + 1) - @Math.Min(Model.Page * Model.PageSize, Model.TotalCount) of @Model.TotalCount documents
+                </div>
+                <nav>
+                    <ul class="pagination kb-pagination mb-0">
+                        @if (Model.HasPreviousPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" asp-route-tag="@currentTag" asp-route-sortBy="@currentSortBy" asp-route-sortDesc="@currentSortDesc" asp-route-pageSize="@currentPageSize">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                </a>
+                            </li>
+                        }
+                        @{
+                            var startPage = Math.Max(1, Model.Page - 2);
+                            var endPage = Math.Min(Model.TotalPages, Model.Page + 2);
+                        }
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="1" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" asp-route-tag="@currentTag" asp-route-sortBy="@currentSortBy" asp-route-sortDesc="@currentSortDesc" asp-route-pageSize="@currentPageSize">1</a>
+                            </li>
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            }
+                        }
+                        @for (var i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" asp-route-tag="@currentTag" asp-route-sortBy="@currentSortBy" asp-route-sortDesc="@currentSortDesc" asp-route-pageSize="@currentPageSize">@i</a>
+                            </li>
+                        }
+                        @if (endPage < Model.TotalPages)
+                        {
+                            @if (endPage < Model.TotalPages - 1)
+                            {
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@Model.TotalPages" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" asp-route-tag="@currentTag" asp-route-sortBy="@currentSortBy" asp-route-sortDesc="@currentSortDesc" asp-route-pageSize="@currentPageSize">@Model.TotalPages</a>
+                            </li>
+                        }
+                        @if (Model.HasNextPage)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-search="@currentSearch" asp-route-categoryId="@currentCategoryId" asp-route-tag="@currentTag" asp-route-sortBy="@currentSortBy" asp-route-sortDesc="@currentSortDesc" asp-route-pageSize="@currentPageSize">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="kb-empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <h4>No Documents Found</h4>
+            @if (!string.IsNullOrEmpty(currentSearch) || currentCategoryId.HasValue || !string.IsNullOrEmpty(currentTag))
+            {
+                <p>No documents match your current filters. Try adjusting your search criteria.</p>
+                <a asp-action="Index" class="kb-btn kb-btn-outline" style="margin-top: 0.5rem;">Clear all filters</a>
+            }
+            else
+            {
+                <p>No documents have been created yet.</p>
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <a asp-action="Create" class="kb-btn kb-btn-primary" style="margin-top: 0.5rem;">Create First Document</a>
+                }
+            }
+        </div>
+    }
+</div>
